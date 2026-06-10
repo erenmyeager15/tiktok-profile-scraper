@@ -325,6 +325,18 @@ export async function handleProfile(
             return;
         }
 
+        // Only save and charge when we actually extracted meaningful data. A blocked
+        // or challenge page yields an all-empty record — don't bill users for that.
+        const hasData = profile.followersCount !== null
+            || profile.totalLikesReceived !== null
+            || profile.totalVideosCount !== null
+            || (profile.displayName !== '' && profile.displayName !== username)
+            || profile.bioText !== '';
+        if (!hasData) {
+            log.warning(`No profile data extracted for @${username} (likely blocked/challenge page). Not saving or charging.`);
+            return;
+        }
+
         await profileDataset.pushData(profile);
         log.info(`Profile scraped: @${username} (private=${profile.isPrivate})`);
 

@@ -49,6 +49,13 @@ Actor.main(async () => {
                 maxUsageCount: 8,
             },
         },
+        preNavigationHooks: [
+            async ({ page }) => {
+                // Fast-fail locator actions so missing selectors don't each block 30s
+                // and stack up past the handler timeout on partial/challenge pages.
+                page.setDefaultTimeout(6000);
+            },
+        ],
         requestHandler: async (ctx) => {
             const url = new URL(ctx.request.url);
             const username = url.pathname.split('/')[1]?.replace(/^@/, '') ?? ctx.request.userData.username;
