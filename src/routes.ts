@@ -46,6 +46,40 @@ async function safeGetAttribute(el: ReturnType<Page['locator']>, attr: string): 
 }
 
 async function scrapeProfileData(page: Page, username: string): Promise<ProfileRecord | null> {
+    // Primary: parse TikTok's embedded rehydration JSON, which contains full profile
+    // data even when the visible data-e2e DOM is challenge-gated. Far more reliable.
+    try {
+        const html = await page.content();
+        const m = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/);
+        if (m && m[1]) {
+            const data = JSON.parse(m[1]);
+            const userInfo = data?.['__DEFAULT_SCOPE__']?.['webapp.user-detail']?.userInfo;
+            const user = userInfo?.user;
+            const stats = userInfo?.statsV2 ?? userInfo?.stats;
+            if (user && (stats || user.uniqueId)) {
+                const numFrom = (v: unknown): number | null => parseAbbreviatedNumber(v);
+                return {
+                    username: STR(user.uniqueId) || username,
+                    displayName: STR(user.nickname) || username,
+                    bioText: STR(user.signature) || '',
+                    followersCount: numFrom(stats?.followerCount),
+                    followingCount: numFrom(stats?.followingCount),
+                    totalLikesReceived: numFrom(stats?.heartCount ?? stats?.heart),
+                    totalVideosCount: numFrom(stats?.videoCount),
+                    verifiedBadge: Boolean(user.verified),
+                    profileImageUrl: STR(user.avatarLarger) || STR(user.avatarMedium) || null,
+                    profileUrl: `https://www.tiktok.com/@${STR(user.uniqueId) || username}`,
+                    region: STR(user.region) || null,
+                    websiteInBio: STR(user.bioLink?.link) || null,
+                    isPrivate: Boolean(user.privateAccount),
+                    scrapedAt: now(),
+                };
+            }
+        }
+    } catch {
+        // Fall through to DOM-based extraction.
+    }
+
     try {
         const isPrivate = await safeIsVisible(page.locator('[data-e2e="private-account"]'));
 
