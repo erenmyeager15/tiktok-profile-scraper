@@ -1,0 +1,42 @@
+{
+    "title": "TikTok Profile Scraper",
+    "description": "Scrape public TikTok profiles and their videos with full analytics data.",
+    "type": "object",
+    "schemaVersion": 1,
+    "required": ["usernames"],
+    "properties": {
+        "usernames": {
+            "title": "TikTok Usernames or Profile URLs",
+            "description": "List of TikTok usernames (e.g. charlidamelio) or full profile URLs. Only public profiles can be scraped.",
+            "type": "array",
+            "editor": "stringList",
+            "default": ["charlidamelio"],
+            "prefill": ["charlidamelio"],
+            "sectionCaption": "Profiles to Scrape"
+        },
+        "maxVideosPerProfile": {
+            "title": "Max Videos per Profile (beta)",
+            "description": "Number of videos to scrape per profile. Profile data is always scraped reliably; video scraping is best-effort and slower. Leave at 0 for fast, reliable profile-only scraping.",
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 200,
+            "editor": "number",
+            "prefill": 0
+        },
+        "proxyConfiguration": {
+            "title": "Proxy Configuration",
+            "description": "Proxy settings. Residential proxy rotation is strongly recommended for TikTok scraping.",
+            "type": "object",
+            "editor": "proxy",
+            "default": {
+                "useApifyProxy": true,
+                "apifyProxyGroups": ["RESIDENTIAL"]
+            },
+            "prefill": {
+                "useApifyProxy": true,
+                "apifyProxyGroups": ["RESIDENTIAL"]
+            }
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "actorSpecification": 1,
+    "name": "tiktok-profile-scraper",
+    "title": "TikTok Profile Scraper - Videos & Analytics",
+    "description": "Scrape public TikTok profiles and videos. Extract followers, likes, bios, video metrics, hashtags, mentions, and more.",
+    "version": "1.0",
+    "input": "../INPUT_SCHEMA.json",
+    "dockerfile": "Dockerfile",
+    "readme": "../README.md",
+    "pricingInfo": {
+        "pricingModel": "PAY_PER_EVENT",
+        "pricingPerEvent": {
+            "actorChargeEvents": {
+                "profile-scraped": {
+                    "eventTitle": "Profile scraped",
+                    "eventDescription": "Charged once for each public TikTok profile successfully scraped.",
+                    "eventPriceUsd": 0.002,
+                    "isPrimaryEvent": true,
+                    "isOneTimeEvent": false
+                }
+            }
+        }
+    },
+    "categories": ["SOCIAL_MEDIA", "MARKETING", "LEAD_GENERATION"],
+    "minMemoryMbytes": 2048,
+    "maxMemoryMbytes": 8192,
+    "defaultRunOptions": {
+        "memoryMbytes": 4096,
+        "timeoutSecs": 43200
+    },
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    }
+}
