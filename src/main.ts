@@ -39,10 +39,11 @@ Actor.main(async () => {
     const crawler = new PlaywrightCrawler({
         proxyConfiguration: proxyConfig,
         maxConcurrency: 2,
-        maxRequestRetries: 3,
+        maxRequestRetries: 5,
         retryOnBlocked: true,
         useSessionPool: true,
-        requestHandlerTimeoutSecs: 120,
+        requestHandlerTimeoutSecs: 180,
+        navigationTimeoutSecs: 45,
         sessionPoolOptions: {
             maxPoolSize: 16,
             sessionOptions: {
@@ -50,10 +51,15 @@ Actor.main(async () => {
             },
         },
         preNavigationHooks: [
-            async ({ page }) => {
-                // Fast-fail locator actions so missing selectors don't each block 30s
-                // and stack up past the handler timeout on partial/challenge pages.
-                page.setDefaultTimeout(6000);
+            async ({ page }, gotoOptions) => {
+                // Fast-fail locator actions so missing selectors don't each block 30s.
+                page.setDefaultTimeout(8000);
+                // TikTok pages keep long-lived connections open, so waiting for the
+                // full "load" event hangs until navigation timeout. Settle on DOM ready.
+                if (gotoOptions) {
+                    gotoOptions.waitUntil = 'domcontentloaded';
+                    gotoOptions.timeout = 45000;
+                }
             },
         ],
         requestHandler: async (ctx) => {
