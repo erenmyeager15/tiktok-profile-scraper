@@ -1,37 +1,69 @@
-# TikTok Profile Scraper — Extract Videos & Analytics
+# TikTok Profile Scraper - Followers, Videos & Engagement Analytics
 
-Scrape public TikTok profiles and extract comprehensive video analytics using Apify and Playwright.
+Scrape public TikTok profiles and their videos, then pull follower counts, likes, bios, video views, hashtags, mentions, and engagement metrics into clean, structured data. Export to JSON, CSV, Excel, or HTML, or pull via the Apify API — no TikTok login and no API key required.
 
-## What It Does
+This TikTok scraper reads each profile's public data and per-video metrics, handles residential proxy rotation, session management, and anti-bot protections so runs stay reliable, and skips private accounts gracefully. Profiles are saved to the default Apify Dataset and videos to a separate `videos` dataset, so each is easy to export on its own.
 
-This Apify Actor scrapes public TikTok profiles to extract detailed profile information and video metrics. It handles residential proxy rotation, session management, and anti-bot protections to reliably collect data from TikTok without being blocked.
+## What It Extracts
 
-For each profile, it extracts: username, display name, bio, follower/following counts, total likes, video count, verification status, profile image, region, website link, and privacy status. For each video, it captures: video ID, full description, hashtags, mentions, sound/music details, likes, comments, shares, views, posted date, duration, thumbnail URL, ad flag, and pin status.
+**Per profile** (default dataset):
 
-Private accounts are detected and skipped gracefully. All video data is deduplicated by video ID.
+- `username`, `displayName`, `bioText`
+- `followersCount`, `followingCount`
+- `totalLikesReceived`, `totalVideosCount`
+- `verifiedBadge` (verification status)
+- `profileImageUrl`, `profileUrl`
+- `region`, `websiteInBio`
+- `isPrivate`
+- `scrapedAt` timestamp
 
-## Features
+**Per video** (`videos` dataset):
 
-- **Batch Processing**: Scrape multiple profiles in a single run
-- **Full Profile Data**: Extract all public profile fields including follower metrics
-- **Video Analytics**: Capture per-video engagement metrics and metadata
-- **Hashtag & Mention Extraction**: Automatically parse hashtags and @mentions from captions
-- **Anti-Bot Protection**: Residential proxy rotation, session pool with max 8 uses per session, random delays (3-7s), retry on blocked
-- **Dual Datasets**: Profiles and videos saved to separate Apify Datasets
-- **PPE Integration**: Per-profile monetization via `profile-scraped` event at $0.005/profile
-- **Private Account Handling**: Automatically detects and skips private profiles
+- `videoId`, `videoUrl`
+- `description`, `hashtags`, `mentions`
+- `soundName`, `soundAuthor`
+- `likesCount`, `commentsCount`, `sharesCount`, `viewsCount`
+- `postedDate`, `durationSeconds`
+- `thumbnailUrl`
+- `isAd`, `isPinned`
+- `scrapedAt` timestamp
 
 ## Use Cases
 
-1. **Influencer Research**: Analyze TikTok creator profiles to understand audience size, content frequency, and engagement levels for partnership evaluation
-2. **Competitor Analysis**: Track competitor video performance, posting patterns, and trending content to inform your own TikTok strategy
-3. **Brand Monitoring**: Discover how your brand is being discussed through hashtag and mention tracking across public creator profiles
-4. **Content Strategy**: Identify which video topics, sounds, and formats drive the most engagement in your niche by studying top performers
-5. **Social Media Reporting**: Generate structured data exports for automated reporting pipelines and client-facing analytics dashboards
+1. **Influencer research**: Evaluate TikTok creators by audience size, content volume, and per-video engagement before a partnership.
+2. **Competitor analysis**: Track competitor video performance, posting cadence, and trending content to sharpen your own TikTok strategy.
+3. **Brand monitoring**: Follow how your brand shows up through hashtag and @mention extraction across public creator profiles.
+4. **Content strategy**: Find the topics, sounds, and formats that drive the most views and likes in your niche by studying top performers.
+5. **Social media reporting**: Feed structured exports into automated reporting pipelines and client-facing analytics dashboards.
+
+## Pricing
+
+This Actor uses Apify Pay Per Event pricing. You are charged once per public profile successfully scraped and saved — blocked, empty, or private-with-no-data results are not billed. Video scraping is included at no extra per-event cost. Apify platform compute and proxy usage are billed separately by Apify.
+
+| Event name | Price per event | 1,000 profiles | 10,000 profiles |
+| --- | ---: | ---: | ---: |
+| `profile-scraped` | $0.002 | $2.00 | $20.00 |
+
+## Input
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `usernames` | string[] | Yes | — | TikTok usernames (e.g. `charlidamelio`) or full profile URLs. Public profiles only. |
+| `maxVideosPerProfile` | integer | No | `0` | Videos to scrape per profile (0–200). Profile data is always scraped reliably; video scraping is best-effort (beta) and slower. Leave at `0` for fast profile-only runs. |
+| `proxyConfiguration` | object | No | `{ useApifyProxy: true, apifyProxyGroups: ["RESIDENTIAL"] }` | Proxy settings. Residential rotation is strongly recommended for TikTok. |
+
+## How to Scrape TikTok Profiles (Step by Step)
+
+1. Click **Try for free** / **Run**.
+2. Add one or more TikTok usernames or profile URLs to `usernames`.
+3. Set `maxVideosPerProfile` (start with `0` to test fast profile-only scraping, then raise it to pull videos).
+4. Keep residential proxies enabled and run the Actor.
+5. Export the profiles from the default dataset and the videos from the `videos` dataset as JSON, CSV, Excel, or HTML, or pull them via the Apify API.
 
 ## Sample Output
 
-### Profile Record
+### Profile record (default dataset)
+
 ```json
 {
     "username": "charlidamelio",
@@ -44,14 +76,15 @@ Private accounts are detected and skipped gracefully. All video data is deduplic
     "verifiedBadge": true,
     "profileImageUrl": "https://p16-sign-sg.tiktokcdn.com/...",
     "profileUrl": "https://www.tiktok.com/@charlidamelio",
-    "region": "United States",
+    "region": "US",
     "websiteInBio": "https://www.charlidamelio.com",
     "isPrivate": false,
     "scrapedAt": "2026-01-15T10:30:00.000Z"
 }
 ```
 
-### Video Record
+### Video record (`videos` dataset)
+
 ```json
 {
     "videoId": "7328456789012345678",
@@ -74,36 +107,21 @@ Private accounts are detected and skipped gracefully. All video data is deduplic
 }
 ```
 
-## Pricing
+## How It Works
 
-| Resource | Cost | Notes |
-|----------|------|-------|
-| Actor compute | $0.49/hour | Apify platform pricing |
-| Residential proxy | $10/GB | Recommended for TikTok |
-| Profile scraped | $0.005/profile | Pay-per-event fee |
-| Dataset storage | Free (first 50 MB) | Included with Apify plan |
+1. Validates the input and normalizes each username (strips `@` and extracts the handle from full URLs).
+2. Opens each public profile with a Playwright browser through residential proxies, using a session pool (max 8 uses per session) and randomized delays to stay resilient.
+3. Reads the profile data from TikTok's embedded rehydration JSON, which is far more reliable than the challenge-gated DOM.
+4. Saves the profile to the default dataset and charges `profile-scraped` once the clean record is stored.
+5. When `maxVideosPerProfile > 0`, intercepts TikTok's video feed responses while scrolling, deduplicates videos by `videoId`, and saves them to the `videos` dataset. Private accounts are detected and skipped.
 
-**Estimated cost per 100 profiles**: ~$0.50 actor time + $5.00 PPE + proxy usage
+## Known Limits
 
-## Input Configuration
-
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `usernames` | string[] | Yes | — | TikTok usernames or profile URLs |
-| `maxVideosPerProfile` | integer | No | 20 | Max videos to scrape per profile (0-200) |
-| `proxyConfiguration` | object | No | `{useApifyProxy:true, apifyProxyGroups:["RESIDENTIAL"]}` | Proxy settings |
-
-## Output Datasets
-
-This Actor produces two datasets:
-
-1. **profiles** — One record per scraped profile with account-level metrics
-2. **videos** — One record per video with engagement and content metadata
-
-## Ethics & Legal
-
-This Actor scrapes only **publicly available** data from TikTok profiles. It does not bypass authentication, access private accounts, or extract personal data beyond what creators publicly share. Users are responsible for ensuring their use of scraped data complies with TikTok's Terms of Service, applicable laws, and data protection regulations in their jurisdiction.
+- Only **public** profiles can be scraped. Private accounts are detected, saved with `isPrivate: true`, and their videos are skipped.
+- Video scraping is **best-effort (beta)**: profile data is always collected reliably, but video counts can vary run to run and are slower. Leave `maxVideosPerProfile` at `0` for fast, reliable profile-only runs.
+- Numeric fields are returned as `null` when TikTok does not expose them; abbreviated counts (e.g. `1.2M`) are expanded to full integers.
+- TikTok actively rate-limits and challenges automated traffic. Residential proxies are strongly recommended, and occasional retries on blocked pages are expected.
 
 ## License
 
-Apache-2.0
+Apache-2.0. See `LICENSE`.
