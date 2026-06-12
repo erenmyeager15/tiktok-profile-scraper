@@ -1,8 +1,8 @@
 {
     "actorSpecification": 1,
     "name": "tiktok-profile-scraper",
-    "title": "TikTok Profile Scraper - Videos & Analytics",
-    "description": "Scrape public TikTok profiles and videos. Extract followers, likes, bios, video metrics, hashtags, mentions, and more.",
+    "title": "TikTok Profile Scraper - Under Maintenance",
+    "description": "Temporarily under maintenance. Runs exit without scraping, saving records, or charging profile-scraped events.",
     "version": "1.0",
     "input": "../INPUT_SCHEMA.json",
     "dockerfile": "Dockerfile",

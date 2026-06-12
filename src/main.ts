@@ -3,7 +3,13 @@ import { PlaywrightCrawler, Dataset, log } from 'crawlee';
 import type { ActorInput, ProfileRecord, VideoRecord } from './types.js';
 import { handleProfile } from './routes.js';
 
+const MAINTENANCE_MESSAGE = 'Under maintenance. This Actor is temporarily unavailable and no data was collected.';
+
 Actor.main(async () => {
+    await Actor.setStatusMessage(MAINTENANCE_MESSAGE);
+    log.warning(MAINTENANCE_MESSAGE);
+    return;
+
     const input = (await Actor.getInput<ActorInput>()) ?? {
         usernames: [],
         maxVideosPerProfile: 20,
