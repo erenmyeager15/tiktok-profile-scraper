@@ -1,11 +1,15 @@
 export interface ActorInput {
     usernames: string[];
-    maxVideosPerProfile: number;
     proxyConfiguration?: {
         useApifyProxy: boolean;
         apifyProxyGroups?: string[];
         apifyProxyCountry?: string;
     };
+}
+
+export interface TikTokResult {
+    profile: ProfileRecord;
+    videos: VideoRecord[];
 }
 
 export interface ProfileRecord {

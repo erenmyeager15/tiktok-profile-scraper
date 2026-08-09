@@ -1,6 +1,6 @@
 {
     "title": "TikTok Profile Scraper",
-    "description": "Scrape public TikTok profiles and their videos with full analytics data.",
+    "description": "Collect public TikTok profile metadata and statistics with bounded HTTP sessions and proxy rotation.",
     "type": "object",
     "schemaVersion": 1,
     "required": ["usernames"],
@@ -14,19 +14,9 @@
             "prefill": ["charlidamelio"],
             "sectionCaption": "Profiles to Scrape"
         },
-        "maxVideosPerProfile": {
-            "title": "Max Videos per Profile (beta)",
-            "description": "Number of videos to scrape per profile. Profile data is always scraped reliably; video scraping is best-effort and slower. Leave at 0 for fast, reliable profile-only scraping.",
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "maximum": 200,
-            "editor": "number",
-            "prefill": 0
-        },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
-            "description": "Proxy settings. Residential proxy rotation is strongly recommended for TikTok scraping.",
+            "description": "Residential proxy rotation is recommended. A failed lookup is retried once with a fresh HTTP session.",
             "type": "object",
             "editor": "proxy",
             "default": {

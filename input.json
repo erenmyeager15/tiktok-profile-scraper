@@ -1,6 +1,5 @@
 {
     "usernames": ["charlidamelio"],
-    "maxVideosPerProfile": 5,
     "proxyConfiguration": {
         "useApifyProxy": true,
         "apifyProxyGroups": ["RESIDENTIAL"]
