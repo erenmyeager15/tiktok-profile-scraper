@@ -2,7 +2,7 @@
 
 Collect structured metadata and statistics from public TikTok profiles for creator research, brand monitoring, and market analysis.
 
-The Actor reads TikTok's public embedded profile payload through bounded HTTP sessions and charges only after a profile record is successfully saved.
+The Actor reads TikTok's public embedded profile payload through bounded HTTP sessions. If TikTok challenges the detailed profile page, it falls back to TikTok's official public oEmbed metadata. It charges only after a profile record is successfully saved.
 
 ## What It Extracts
 
@@ -28,7 +28,7 @@ Each successfully saved public profile costs **$0.002**. Failed, blocked, privat
 }
 ```
 
-A run accepts up to 50 usernames or profile URLs. Residential proxy rotation is the reliable default for consistent public responses.
+A run accepts up to 50 usernames or profile URLs. Residential proxy rotation is the reliable default for detailed public statistics. When only oEmbed metadata is available, identity fields are returned and unavailable metrics are `null` rather than estimated.
 
 ## Sample Output
 
@@ -52,8 +52,8 @@ A run accepts up to 50 usernames or profile URLs. Residential proxy rotation is 
 ## Reliability and Cost Controls
 
 1. Usernames and URLs are normalized and deduplicated.
-2. A low-cost public HTML or API lookup is attempted first.
-3. A failed lookup is retried once with a fresh proxy session.
+2. TikTok's official public oEmbed endpoint verifies profile identity as a fallback.
+3. Detailed profile lookup is retried once with a fresh proxy session.
 4. No browser, video download, login, or private endpoint is used.
 5. Retries, memory, runtime, and input size are bounded.
 6. The run fails clearly when no valid public profile is returned.

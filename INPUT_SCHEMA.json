@@ -7,16 +7,16 @@
     "properties": {
         "usernames": {
             "title": "TikTok Usernames or Profile URLs",
-            "description": "List of TikTok usernames (e.g. charlidamelio) or full profile URLs. Only public profiles can be scraped.",
+            "description": "List of TikTok usernames (e.g. scout2015) or full profile URLs. Only public profiles can be scraped.",
             "type": "array",
             "editor": "stringList",
-            "default": ["charlidamelio"],
-            "prefill": ["charlidamelio"],
+            "default": ["scout2015"],
+            "prefill": ["scout2015"],
             "sectionCaption": "Profiles to Scrape"
         },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
-            "description": "Residential proxy rotation is recommended. A failed lookup is retried once with a fresh HTTP session.",
+            "description": "Residential proxy rotation is recommended for detailed metrics. Public oEmbed metadata is used as a safe fallback when TikTok challenges the profile page.",
             "type": "object",
             "editor": "proxy",
             "default": {

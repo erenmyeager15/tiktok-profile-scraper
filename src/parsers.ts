@@ -3,6 +3,39 @@ import type { ProfileRecord, TikTokResult, VideoRecord } from './types.js';
 type JsonRecord = Record<string, any>;
 const text = (value: unknown): string => typeof value === 'string' ? value.trim() : '';
 
+export function parseTikTokOEmbed(payload: JsonRecord, requestedUsername: string): TikTokResult | null {
+    if (text(payload.provider_name).toLowerCase() !== 'tiktok' || text(payload.type) !== 'rich') return null;
+
+    const authorUrl = text(payload.author_url);
+    const urlUsername = authorUrl.match(/tiktok\.com\/@([^/?#]+)/i)?.[1] ?? '';
+    const htmlUsername = text(payload.html).match(/data-unique-id=["']([^"']+)["']/i)?.[1] ?? '';
+    const username = urlUsername || htmlUsername || requestedUsername;
+    if (!username || username.toLowerCase() !== requestedUsername.toLowerCase()) return null;
+
+    const displayName = text(payload.author_name)
+        || text(payload.title).replace(/(?:'s)?\s+Creator Profile$/i, '').trim()
+        || username;
+    return {
+        profile: {
+            username,
+            displayName,
+            bioText: '',
+            followersCount: null,
+            followingCount: null,
+            totalLikesReceived: null,
+            totalVideosCount: null,
+            verifiedBadge: false,
+            profileImageUrl: text(payload.thumbnail_url) || null,
+            profileUrl: authorUrl || `https://www.tiktok.com/@${username}`,
+            region: null,
+            websiteInBio: null,
+            isPrivate: false,
+            scrapedAt: new Date().toISOString(),
+        },
+        videos: [],
+    };
+}
+
 export function parseAbbreviatedNumber(value: unknown): number | null {
     if (value === null || value === undefined || value === '') return null;
     if (typeof value === 'number') return Number.isFinite(value) ? value : null;

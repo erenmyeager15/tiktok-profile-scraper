@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mapTikTokVideo, parseAbbreviatedNumber, parseTikTokHtml, parseTikTokPayload } from '../src/parsers.js';
+import { mapTikTokVideo, parseAbbreviatedNumber, parseTikTokHtml, parseTikTokOEmbed, parseTikTokPayload } from '../src/parsers.js';
 
 test('parseAbbreviatedNumber handles compact metrics', () => {
     assert.equal(parseAbbreviatedNumber('1.2B'), 1_200_000_000);
@@ -37,4 +37,27 @@ test('parseTikTokHtml supports SIGI_STATE profile payloads', () => {
     const result = parseTikTokHtml(html, 'demo');
     assert.equal(result?.profile.followersCount, 42);
     assert.equal(result?.profile.totalVideosCount, 8);
+});
+
+test('parseTikTokOEmbed maps an official public creator profile response', () => {
+    const result = parseTikTokOEmbed({
+        version: '1.0',
+        type: 'rich',
+        title: "Scout, Suki & Stella's Creator Profile",
+        author_url: 'https://www.tiktok.com/@scout2015',
+        author_name: 'Scout, Suki & Stella',
+        provider_name: 'TikTok',
+        html: '<blockquote data-unique-id="scout2015"></blockquote>',
+    }, 'scout2015');
+    assert.equal(result?.profile.username, 'scout2015');
+    assert.equal(result?.profile.displayName, 'Scout, Suki & Stella');
+    assert.equal(result?.profile.followersCount, null);
+});
+
+test('parseTikTokOEmbed rejects mismatched profiles', () => {
+    assert.equal(parseTikTokOEmbed({
+        type: 'rich',
+        author_url: 'https://www.tiktok.com/@different',
+        provider_name: 'TikTok',
+    }, 'requested'), null);
 });

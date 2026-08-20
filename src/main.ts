@@ -1,6 +1,6 @@
 import { Actor, log } from 'apify';
 import { gotScraping } from 'got-scraping';
-import { parseTikTokHtml, parseTikTokPayload } from './parsers.js';
+import { parseTikTokHtml, parseTikTokOEmbed, parseTikTokPayload } from './parsers.js';
 import type { ActorInput, TikTokResult } from './types.js';
 
 const MAX_PROFILES = 50;
@@ -21,6 +21,29 @@ async function storeResult(result: TikTokResult): Promise<void> {
     await Actor.pushData(result.profile, 'profile-scraped');
 }
 
+async function fetchOEmbedProfile(username: string, proxyUrl?: string): Promise<TikTokResult | null> {
+    try {
+        const response = await gotScraping({
+            url: 'https://www.tiktok.com/oembed',
+            searchParams: { url: `https://www.tiktok.com/@${username}` },
+            proxyUrl,
+            headers: { accept: 'application/json', 'accept-language': 'en-US,en;q=0.9' },
+            responseType: 'json',
+            timeout: { request: 10_000 },
+            retry: { limit: 0 },
+            throwHttpErrors: false,
+        });
+        if (response.statusCode !== 200) {
+            log.debug(`TikTok oEmbed returned HTTP ${response.statusCode} for @${username}.`);
+            return null;
+        }
+        return parseTikTokOEmbed(response.body as Record<string, unknown>, username);
+    } catch (error) {
+        log.debug(`TikTok oEmbed lookup failed for @${username}: ${String(error)}`);
+        return null;
+    }
+}
+
 async function fetchProfile(username: string, proxyUrl?: string): Promise<TikTokResult | null> {
     try {
         const response = await gotScraping({
@@ -31,9 +54,14 @@ async function fetchProfile(username: string, proxyUrl?: string): Promise<TikTok
             retry: { limit: 0 },
             throwHttpErrors: false,
         });
-        if (response.statusCode !== 200) return null;
+        if (response.statusCode !== 200) {
+            log.debug(`TikTok profile page returned HTTP ${response.statusCode} for @${username}.`);
+            return null;
+        }
         const embeddedResult = parseTikTokHtml(response.body, username);
         if (embeddedResult) return embeddedResult;
+
+        log.debug(`TikTok profile page for @${username} contained no supported profile payload (${response.body.length} bytes).`);
 
         const cookies = cookieHeader(response.headers['set-cookie']);
         const msToken = cookies.match(/(?:^|;\s*)msToken=([^;]+)/)?.[1] ?? '';
@@ -103,10 +131,18 @@ Actor.main(async () => {
     await Actor.setStatusMessage(`Checking ${usernames.length} TikTok profile(s)`);
     for (const username of usernames) {
         let result: TikTokResult | null = null;
+        let oEmbedResult = await fetchOEmbedProfile(username);
         for (let attempt = 1; attempt <= 2 && !result; attempt += 1) {
             const proxyUrl = proxyConfiguration ? await proxyConfiguration.newUrl() : undefined;
+            if (!oEmbedResult && attempt === 1 && proxyUrl) {
+                oEmbedResult = await fetchOEmbedProfile(username, proxyUrl);
+            }
             result = await fetchProfile(username, proxyUrl);
             if (!result && attempt === 1) log.info(`Retrying @${username} with a fresh HTTP session.`);
+        }
+        if (!result && oEmbedResult) {
+            log.info(`Using TikTok's public oEmbed metadata for @${username}; detailed metrics were not available.`);
+            result = oEmbedResult;
         }
         if (!result) {
             log.warning(`No public profile data returned for @${username}.`);
