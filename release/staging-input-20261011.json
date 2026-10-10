@@ -1,0 +1,11 @@
+{
+  "usernames": ["scout2015"],
+  "trackGrowth": true,
+  "monitorName": "staging-tiktok-us-20261011",
+  "observationHistoryLimit": 5,
+  "proxyConfiguration": {
+    "useApifyProxy": true,
+    "apifyProxyGroups": ["RESIDENTIAL"],
+    "apifyProxyCountry": "US"
+  }
+}

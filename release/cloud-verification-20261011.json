@@ -1,0 +1,76 @@
+{
+  "verifiedAt": "2026-10-11",
+  "actor": "fascinating_lentil/tiktok-profile-scraper",
+  "actorId": "j3YsdMURcf4KCbd3l",
+  "publishedBuild": {
+    "buildId": "LauTN67suYOPKPP9n",
+    "buildNumber": "1.0.20",
+    "sourceCommit": "8cfa053",
+    "promotionMethod": "Exact tested staging build promoted to latest without rebuilding"
+  },
+  "configuration": {
+    "memoryMbytes": 256,
+    "proxy": "Apify Residential US",
+    "pricePerSuccessfulProfileUsd": 0.002,
+    "actorStartPriceUsd": 0.00005,
+    "platformUsageBillingModel": "USER"
+  },
+  "localChecks": {
+    "testsPassed": 18,
+    "typescriptBuild": "passed",
+    "typecheck": "passed",
+    "inputSchema": "passed",
+    "productionVulnerabilities": 0
+  },
+  "cloudChecks": [
+    {
+      "purpose": "One-profile monitoring baseline",
+      "runId": "a4YgjRbF805xOZlGh",
+      "status": "SUCCEEDED",
+      "savedProfiles": 1,
+      "dataQuality": "detailed",
+      "trackingStatus": "baseline",
+      "observationCount": 1,
+      "durationSeconds": 5.284,
+      "peakMemoryBytes": 47566848,
+      "residentialProxyGb": 0.00008790381252765656,
+      "platformUsageUsd": 0.0010452129819028908,
+      "reports": ["OUTPUT", "MONITORING-REPORT", "MONITORING-REPORT.csv"]
+    },
+    {
+      "purpose": "Matching one-profile monitoring repeat",
+      "runId": "0kyeRgrYOoICcpBJ6",
+      "status": "SUCCEEDED",
+      "savedProfiles": 1,
+      "dataQuality": "detailed",
+      "trackingStatus": "unchanged",
+      "observationCount": 2,
+      "falseChanges": 0,
+      "stateWriteFailures": 0,
+      "durationSeconds": 5.481,
+      "peakMemoryBytes": 48234496,
+      "residentialProxyGb": 0.0000902172178030014,
+      "platformUsageUsd": 0.0010712140050828456,
+      "reports": ["OUTPUT", "MONITORING-REPORT", "MONITORING-REPORT.csv"]
+    }
+  ],
+  "economics": {
+    "apifySharePercent": 20,
+    "estimatedCreatorShareOfEventRevenuePercent": 80,
+    "conservativeMarginIfUserBilledPlatformUsageWereSubtractedPercent": {
+      "baseline": 36.27,
+      "repeat": 34.68
+    },
+    "buildUsageUsd": 0.005144,
+    "conservativeBuildTestsAndListedFeesUsd": 0.011360426986985737,
+    "approvedSoftTargetUsd": 0.05,
+    "note": "Platform usage is user-billed, so it is not an author cost. Conservative margins above subtract it anyway and still exceed the 25% publication gate. Owner-test evidence is not guaranteed customer income."
+  },
+  "publication": {
+    "latestBuildVerified": true,
+    "storeMetadataUpdated": true,
+    "notice": "NONE",
+    "priceChanged": false,
+    "defaultMemoryChanged": false
+  }
+}
