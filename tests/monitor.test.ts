@@ -89,6 +89,42 @@ test('labels a complete repeat unchanged', () => {
     assert.deepEqual(repeat.profile.growthSignals, []);
 });
 
+test('suppresses short-interval count noise and does not annualize it', () => {
+    const baseline = applyGrowthTracking(profile({
+        followersCount: 9_022_431,
+        totalLikesReceived: 108_329_695,
+        scrapedAt: '2026-10-10T09:20:01.676Z',
+    }), null, 'us-creators', 12);
+    const repeat = applyGrowthTracking(profile({
+        followersCount: 9_022_243,
+        totalLikesReceived: 108_326_426,
+        scrapedAt: '2026-10-10T09:20:37.482Z',
+    }), baseline.state, 'us-creators', 12);
+
+    assert.equal(repeat.profile.trackingStatus, 'unchanged');
+    assert.equal(repeat.profile.followersDelta, null);
+    assert.equal(repeat.profile.likesDelta, null);
+    assert.equal(repeat.profile.followersPerDay, null);
+    assert.equal(repeat.profile.likesPerDay, null);
+    assert.deepEqual(repeat.profile.growthSignals, []);
+});
+
+test('waits at least one hour before calculating daily velocity', () => {
+    const baseline = applyGrowthTracking(profile(), null, 'us-creators', 12);
+    const repeat = applyGrowthTracking(profile({
+        followersCount: 1_100,
+        totalLikesReceived: 5_500,
+        totalVideosCount: 51,
+        scrapedAt: '2026-10-01T00:30:00.000Z',
+    }), baseline.state, 'us-creators', 12);
+
+    assert.equal(repeat.profile.trackingStatus, 'updated');
+    assert.equal(repeat.profile.followersDelta, 100);
+    assert.equal(repeat.profile.followersPerDay, null);
+    assert.equal(repeat.profile.postsPerWeek, null);
+    assert.deepEqual(repeat.profile.growthSignals, ['new_videos']);
+});
+
 test('retains a bounded history while preserving the lifetime observation count', () => {
     let state: ProfileMonitorState | null = null;
     for (let day = 1; day <= 5; day += 1) {

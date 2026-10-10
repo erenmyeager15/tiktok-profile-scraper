@@ -32,6 +32,8 @@ const round = (value: number | null, digits = 4): number | null => {
     const factor = 10 ** digits;
     return Math.round(value * factor) / factor;
 };
+const MIN_RATE_INTERVAL_DAYS = 1 / 24;
+const COUNT_NOISE_RATIO = 0.0001;
 
 const hash = (value: string): string => createHash('sha256').update(value).digest('hex');
 
@@ -64,10 +66,14 @@ function numericChange(
     field: string,
     current: number | null,
     previous: number | null,
+    noiseRatio = COUNT_NOISE_RATIO,
 ): number | null {
     if (current === null || previous === null) return null;
-    if (current !== previous) changedFields.push(field);
-    return current - previous;
+    const delta = current - previous;
+    const minimumMeaningfulDelta = Math.max(1, Math.ceil(Math.abs(previous) * noiseRatio));
+    if (Math.abs(delta) < minimumMeaningfulDelta) return null;
+    if (delta !== 0) changedFields.push(field);
+    return delta;
 }
 
 function textChanged(current: unknown, previous: unknown): boolean {
@@ -95,7 +101,7 @@ export function applyGrowthTracking(
         followersDelta = numericChange(changedFields, 'followersCount', profile.followersCount, previousDetailed.followersCount);
         numericChange(changedFields, 'followingCount', profile.followingCount, previousDetailed.followingCount);
         likesDelta = numericChange(changedFields, 'totalLikesReceived', profile.totalLikesReceived, previousDetailed.totalLikesReceived);
-        videosDelta = numericChange(changedFields, 'totalVideosCount', profile.totalVideosCount, previousDetailed.totalVideosCount);
+        videosDelta = numericChange(changedFields, 'totalVideosCount', profile.totalVideosCount, previousDetailed.totalVideosCount, 0);
         if (textChanged(profile.displayName, previousDetailed.displayName)) changedFields.push('displayName');
         if (textChanged(profile.bioText, previousDetailed.bioText)) changedFields.push('bioText');
         if (textChanged(profile.websiteInBio, previousDetailed.websiteInBio)) changedFields.push('websiteInBio');
@@ -108,23 +114,24 @@ export function applyGrowthTracking(
     const followersGrowthPercent = followersDelta !== null && (previousDetailed?.followersCount ?? 0) > 0
         ? round((followersDelta / previousDetailed!.followersCount!) * 100)
         : null;
-    const followersPerDay = followersDelta !== null && daysSincePrevious
-        ? round(followersDelta / daysSincePrevious, 2)
+    const hasRateInterval = daysSincePrevious !== null && daysSincePrevious >= MIN_RATE_INTERVAL_DAYS;
+    const followersPerDay = followersDelta !== null && hasRateInterval
+        ? round(followersDelta / daysSincePrevious!, 2)
         : null;
-    const likesPerDay = likesDelta !== null && daysSincePrevious
-        ? round(likesDelta / daysSincePrevious, 2)
+    const likesPerDay = likesDelta !== null && hasRateInterval
+        ? round(likesDelta / daysSincePrevious!, 2)
         : null;
-    const postsPerWeek = videosDelta !== null && daysSincePrevious
-        ? round((videosDelta / daysSincePrevious) * 7, 2)
+    const postsPerWeek = videosDelta !== null && hasRateInterval
+        ? round((videosDelta / daysSincePrevious!) * 7, 2)
         : null;
     const likesPerNewVideo = likesDelta !== null && videosDelta !== null && videosDelta > 0
         ? round(likesDelta / videosDelta, 2)
         : null;
 
     const growthSignals: string[] = [];
-    if ((followersDelta ?? 0) > 0) growthSignals.push('followers_growing');
-    if ((followersDelta ?? 0) < 0) growthSignals.push('followers_declining');
-    if (followersGrowthPercent !== null && daysSincePrevious !== null && daysSincePrevious <= 7) {
+    if (hasRateInterval && (followersDelta ?? 0) > 0) growthSignals.push('followers_growing');
+    if (hasRateInterval && (followersDelta ?? 0) < 0) growthSignals.push('followers_declining');
+    if (hasRateInterval && followersGrowthPercent !== null && daysSincePrevious! <= 7) {
         if (followersGrowthPercent >= 5) growthSignals.push('follower_spike');
         if (followersGrowthPercent <= -5) growthSignals.push('follower_drop');
     }
