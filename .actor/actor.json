@@ -1,8 +1,8 @@
 {
     "actorSpecification": 1,
     "name": "tiktok-profile-scraper",
-    "title": "TikTok Profile Scraper - Creator Growth Monitor",
-    "description": "Track public TikTok creator profiles with follower, like, and video-count history, daily growth velocity, posting pace, and profile-change signals. Uses bounded HTTP sessions and charges only successfully saved profiles.",
+    "title": "TikTok Profile Scraper & Creator Growth Monitor",
+    "description": "Track public TikTok profiles with follower, like, video and posting-pace history, profile-change signals, named watchlists, and downloadable JSON/CSV reports. Charges only successfully saved profiles.",
     "version": "1.0",
     "input": "../INPUT_SCHEMA.json",
     "dockerfile": "Dockerfile",

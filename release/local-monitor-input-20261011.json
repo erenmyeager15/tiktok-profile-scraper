@@ -1,0 +1,9 @@
+{
+  "usernames": ["scout2015"],
+  "trackGrowth": true,
+  "monitorName": "local-us-creator-check",
+  "observationHistoryLimit": 5,
+  "proxyConfiguration": {
+    "useApifyProxy": false
+  }
+}

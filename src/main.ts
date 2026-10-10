@@ -8,6 +8,7 @@ import {
     type MonitorStore,
 } from './monitor.js';
 import { parseTikTokHtml, parseTikTokOEmbed, parseTikTokPayload } from './parsers.js';
+import { buildMonitoringReport, monitoringReportCsv } from './report.js';
 import type { ActorInput, ProfileRecord, TikTokResult } from './types.js';
 
 const MAX_PROFILES = 50;
@@ -153,6 +154,7 @@ Actor.main(async () => {
     let monitoringUnchanged = 0;
     let monitoringPartial = 0;
     let monitoringStateWriteFailures = 0;
+    const collectedProfiles: ProfileRecord[] = [];
     const monitorStore = trackGrowth
         ? await Actor.openKeyValueStore(monitorStoreName(monitorName)) as unknown as MonitorStore
         : null;
@@ -193,6 +195,7 @@ Actor.main(async () => {
         const stored = await storeResult(profile);
         if (stored.saved) {
             savedProfiles += 1;
+            collectedProfiles.push(profile);
             if (profile.trackingStatus === 'baseline') monitoringBaselines += 1;
             if (profile.trackingStatus === 'updated') monitoringUpdates += 1;
             if (profile.trackingStatus === 'unchanged') monitoringUnchanged += 1;
@@ -215,6 +218,17 @@ Actor.main(async () => {
     if (savedProfiles === 0) {
         throw new Error('No public TikTok profiles could be collected. The targets may be private, unavailable, region-gated, or temporarily blocked.');
     }
+    const monitoringReport = buildMonitoringReport(
+        collectedProfiles,
+        usernames.length,
+        trackGrowth,
+        monitorName,
+        monitoringStateWriteFailures,
+    );
+    await Actor.setValue('MONITORING-REPORT', monitoringReport);
+    await Actor.setValue('MONITORING-REPORT.csv', monitoringReportCsv(monitoringReport), {
+        contentType: 'text/csv; charset=utf-8',
+    });
     await Actor.setValue('OUTPUT', {
         status: 'COMPLETE',
         profilesRequested: usernames.length,
@@ -228,6 +242,7 @@ Actor.main(async () => {
             partial: monitoringPartial,
             stateWriteFailures: monitoringStateWriteFailures,
         },
+        reportGenerated: true,
     });
     await Actor.setStatusMessage(`Saved ${savedProfiles}/${usernames.length} profile(s)`);
 });

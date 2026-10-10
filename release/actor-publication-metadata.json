@@ -1,0 +1,14 @@
+{
+  "title": "TikTok Profile Scraper & Creator Growth Monitor",
+  "description": "Track public TikTok profiles with follower, like, video and posting-pace history, profile-change signals, named watchlists, and downloadable JSON/CSV reports. Charges only successfully saved profiles.",
+  "seoTitle": "TikTok Profile Scraper & Creator Growth Tracker",
+  "seoDescription": "Scrape public TikTok profile statistics and monitor follower growth, likes, posting pace, verification and bio changes. Scheduled watchlists with JSON and CSV reports.",
+  "categories": ["SOCIAL_MEDIA", "MARKETING", "AUTOMATION"],
+  "pricing": {
+    "profileScrapedUsd": 0.002,
+    "note": "One event is charged only after a public profile record is successfully saved. Monitoring fields and reports are included."
+  },
+  "defaultMemoryMbytes": 256,
+  "defaultProxy": "Apify Residential",
+  "positioning": "Profile-only creator growth monitoring rather than post-history extraction."
+}

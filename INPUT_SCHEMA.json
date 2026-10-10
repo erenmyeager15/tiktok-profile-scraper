@@ -1,6 +1,6 @@
 {
-    "title": "TikTok Profile Scraper",
-    "description": "Collect public TikTok profile metadata and statistics with bounded HTTP sessions and proxy rotation.",
+    "title": "TikTok Creator Growth Monitor",
+    "description": "Collect public TikTok profile statistics and track creator growth, posting pace, engagement changes, and profile updates across scheduled runs. JSON and CSV reports included.",
     "type": "object",
     "schemaVersion": 1,
     "required": ["usernames"],

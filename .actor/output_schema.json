@@ -1,7 +1,7 @@
 {
   "actorOutputSchemaVersion": 1,
-  "title": "TikTok Profile Scraper Output",
-  "description": "Structured public TikTok profile statistics and optional persistent creator-growth monitoring.",
+  "title": "TikTok Creator Growth Monitor Output",
+  "description": "Structured public TikTok profile statistics, persistent creator-growth monitoring, and downloadable JSON/CSV reports.",
   "type": "object",
   "properties": {
     "results": {
@@ -9,6 +9,18 @@
       "title": "TikTok profile records",
       "description": "Clean dataset items containing public profile data plus optional growth status, deltas, velocity, posting pace, and profile-change signals.",
       "template": "{{links.apiDefaultDatasetUrl}}/items"
+    },
+    "monitoringReport": {
+      "type": "string",
+      "title": "Creator monitoring report (JSON)",
+      "description": "Run totals, data-quality coverage, tracking states, profile deltas, posting pace, and growth-signal counts.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/MONITORING-REPORT"
+    },
+    "monitoringCsv": {
+      "type": "string",
+      "title": "Creator monitoring report (CSV)",
+      "description": "Formula-safe spreadsheet export for creator watchlists, campaign reporting, and scheduled growth reviews.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/MONITORING-REPORT.csv"
     }
   }
 }

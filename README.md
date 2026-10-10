@@ -1,4 +1,4 @@
-# TikTok Profile Scraper - Creator Growth Monitor
+# TikTok Profile Scraper & Creator Growth Monitor
 
 Collect structured public TikTok profile statistics and turn scheduled runs into creator-growth intelligence for influencer research, campaign reporting, competitor monitoring, and brand analysis.
 
@@ -23,6 +23,14 @@ Enable `trackGrowth`, choose a stable `monitorName`, and schedule the same creat
 Every successful observation remains one normal `profile-scraped` event. There is no extra monitoring event. The Actor intentionally does not suppress unchanged profiles: scheduled observations are the evidence needed for a complete time series, and charging the normal row keeps the low-volume monitoring workflow sustainable.
 
 If TikTok exposes only identity data through its official oEmbed fallback, `dataQuality` is `identity-only` and `trackingStatus` is `partial`. That observation is retained, but missing counts do not overwrite the most recent detailed baseline or create false growth alerts.
+
+Every successful run also writes:
+
+- `OUTPUT` — compact run totals and monitoring-state counts
+- `MONITORING-REPORT` — JSON summary with data-quality coverage, deltas, posting pace, and signal counts
+- `MONITORING-REPORT.csv` — formula-safe spreadsheet export for watchlists and campaign reporting
+
+These reports are included in the normal profile price; there is no separate reporting or monitoring fee.
 
 ## Pricing
 
@@ -83,6 +91,7 @@ A run accepts up to 50 usernames or profile URLs. Residential proxy rotation is 
 4. No browser, video download, login, or private endpoint is used.
 5. Retries, memory, runtime, and input size are bounded.
 6. The run fails clearly when no valid public profile is returned.
+7. Short-interval count noise is suppressed, and daily velocity is calculated only after at least one hour.
 
 ## Responsible Use
 
