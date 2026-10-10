@@ -14,6 +14,36 @@
             "prefill": ["scout2015"],
             "sectionCaption": "Profiles to Scrape"
         },
+        "trackGrowth": {
+            "title": "Track creator growth across runs",
+            "description": "Add persistent baseline, updated, unchanged, or partial status plus follower, like, and video deltas. Reuse the same monitor name on scheduled runs.",
+            "type": "boolean",
+            "editor": "checkbox",
+            "default": false,
+            "prefill": false,
+            "sectionCaption": "Creator Growth Monitoring"
+        },
+        "monitorName": {
+            "title": "Monitor name",
+            "description": "Stable name for one creator watchlist, such as us-fitness-creators. Histories with different names stay separate.",
+            "type": "string",
+            "editor": "textfield",
+            "default": "default",
+            "prefill": "default",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9 _-]+$"
+        },
+        "observationHistoryLimit": {
+            "title": "Observations retained per profile",
+            "description": "Bounded private history used to calculate growth velocity and profile changes.",
+            "type": "integer",
+            "editor": "number",
+            "default": 12,
+            "prefill": 12,
+            "minimum": 2,
+            "maximum": 30
+        },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
             "description": "Residential proxy rotation is recommended for detailed metrics. Public oEmbed metadata is used as a safe fallback when TikTok challenges the profile page.",

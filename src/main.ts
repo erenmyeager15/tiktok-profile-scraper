@@ -1,7 +1,14 @@
 import { Actor, log } from 'apify';
 import { gotScraping } from 'got-scraping';
+import {
+    applyGrowthTracking,
+    loadProfileState,
+    monitorStoreName,
+    saveProfileState,
+    type MonitorStore,
+} from './monitor.js';
 import { parseTikTokHtml, parseTikTokOEmbed, parseTikTokPayload } from './parsers.js';
-import type { ActorInput, TikTokResult } from './types.js';
+import type { ActorInput, ProfileRecord, TikTokResult } from './types.js';
 
 const MAX_PROFILES = 50;
 
@@ -17,8 +24,12 @@ function normalizeUsername(value: string): string | null {
     return /^[a-zA-Z0-9._]{1,24}$/.test(candidate) ? candidate : null;
 }
 
-async function storeResult(result: TikTokResult): Promise<void> {
-    await Actor.pushData(result.profile, 'profile-scraped');
+async function storeResult(profile: ProfileRecord): Promise<{ saved: boolean; limitReached: boolean }> {
+    const chargeResult = await Actor.pushData(profile, 'profile-scraped');
+    return {
+        saved: chargeResult.chargedCount > 0 || chargeResult.eventChargeLimitReached !== true,
+        limitReached: chargeResult.eventChargeLimitReached === true,
+    };
 }
 
 async function fetchOEmbedProfile(username: string, proxyUrl?: string): Promise<TikTokResult | null> {
@@ -119,6 +130,16 @@ Actor.main(async () => {
     if (usernames.length === 0) throw new Error('Provide at least one valid TikTok username or profile URL.');
     if (usernames.length > MAX_PROFILES) throw new Error(`A run can contain at most ${MAX_PROFILES} profiles.`);
 
+    const trackGrowth = input.trackGrowth === true;
+    const monitorName = (input.monitorName ?? 'default').trim();
+    const historyLimit = input.observationHistoryLimit ?? 12;
+    if (trackGrowth && !/^[A-Za-z0-9 _-]{1,64}$/.test(monitorName)) {
+        throw new Error('Monitor name must contain 1-64 letters, numbers, spaces, underscores, or hyphens.');
+    }
+    if (!Number.isInteger(historyLimit) || historyLimit < 2 || historyLimit > 30) {
+        throw new Error('Observation history limit must be an integer between 2 and 30.');
+    }
+
     const proxyInput = input.proxyConfiguration;
     const proxyConfiguration = proxyInput?.useApifyProxy
         ? await Actor.createProxyConfiguration({
@@ -127,6 +148,14 @@ Actor.main(async () => {
         })
         : undefined;
     let savedProfiles = 0;
+    let monitoringBaselines = 0;
+    let monitoringUpdates = 0;
+    let monitoringUnchanged = 0;
+    let monitoringPartial = 0;
+    let monitoringStateWriteFailures = 0;
+    const monitorStore = trackGrowth
+        ? await Actor.openKeyValueStore(monitorStoreName(monitorName)) as unknown as MonitorStore
+        : null;
 
     await Actor.setStatusMessage(`Checking ${usernames.length} TikTok profile(s)`);
     for (const username of usernames) {
@@ -148,12 +177,57 @@ Actor.main(async () => {
             log.warning(`No public profile data returned for @${username}.`);
             continue;
         }
-        await storeResult(result);
-        savedProfiles += 1;
+        let profile = result.profile;
+        let nextMonitorState = null;
+        if (monitorStore) {
+            try {
+                const previousState = await loadProfileState(monitorStore, username);
+                const prepared = applyGrowthTracking(profile, previousState, monitorName, historyLimit);
+                profile = prepared.profile;
+                nextMonitorState = prepared.state;
+            } catch (error) {
+                log.warning(`Could not load growth history for @${username}; saving the profile without tracking fields: ${String(error)}`);
+            }
+        }
+
+        const stored = await storeResult(profile);
+        if (stored.saved) {
+            savedProfiles += 1;
+            if (profile.trackingStatus === 'baseline') monitoringBaselines += 1;
+            if (profile.trackingStatus === 'updated') monitoringUpdates += 1;
+            if (profile.trackingStatus === 'unchanged') monitoringUnchanged += 1;
+            if (profile.trackingStatus === 'partial') monitoringPartial += 1;
+            if (monitorStore && nextMonitorState) {
+                try {
+                    await saveProfileState(monitorStore, username, nextMonitorState);
+                } catch (error) {
+                    monitoringStateWriteFailures += 1;
+                    log.warning(`Saved @${username}, but could not persist its growth history: ${String(error)}`);
+                }
+            }
+        }
+        if (stored.limitReached) {
+            log.info(`Stopped at the user's maximum charge after ${savedProfiles} saved profile(s).`);
+            break;
+        }
     }
 
     if (savedProfiles === 0) {
         throw new Error('No public TikTok profiles could be collected. The targets may be private, unavailable, region-gated, or temporarily blocked.');
     }
+    await Actor.setValue('OUTPUT', {
+        status: 'COMPLETE',
+        profilesRequested: usernames.length,
+        profilesSaved: savedProfiles,
+        trackGrowth,
+        monitorName: trackGrowth ? monitorName : null,
+        monitoring: {
+            baselines: monitoringBaselines,
+            updated: monitoringUpdates,
+            unchanged: monitoringUnchanged,
+            partial: monitoringPartial,
+            stateWriteFailures: monitoringStateWriteFailures,
+        },
+    });
     await Actor.setStatusMessage(`Saved ${savedProfiles}/${usernames.length} profile(s)`);
 });

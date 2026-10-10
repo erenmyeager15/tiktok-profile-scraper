@@ -14,6 +14,15 @@ test('parseTikTokPayload maps a public profile', () => {
     } } } }, 'demo');
     assert.equal(result?.profile.followersCount, 12_000);
     assert.equal(result?.profile.verifiedBadge, true);
+    assert.equal(result?.profile.dataQuality, 'detailed');
+});
+
+test('parseTikTokPayload labels identity-only payloads without count metrics', () => {
+    const result = parseTikTokPayload({ userInfo: {
+        user: { uniqueId: 'demo', nickname: 'Demo' },
+        stats: {},
+    } }, 'demo');
+    assert.equal(result?.profile.dataQuality, 'identity-only');
 });
 
 test('mapTikTokVideo maps metrics and tags', () => {

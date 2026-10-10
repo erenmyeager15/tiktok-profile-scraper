@@ -1,5 +1,8 @@
 export interface ActorInput {
     usernames: string[];
+    trackGrowth?: boolean;
+    monitorName?: string;
+    observationHistoryLimit?: number;
     proxyConfiguration?: {
         useApifyProxy: boolean;
         apifyProxyGroups?: string[];
@@ -27,6 +30,25 @@ export interface ProfileRecord {
     websiteInBio: string | null;
     isPrivate: boolean;
     scrapedAt: string;
+    dataQuality: 'detailed' | 'identity-only';
+    monitorName?: string | null;
+    trackingStatus?: 'baseline' | 'updated' | 'unchanged' | 'partial' | null;
+    firstSeenAt?: string | null;
+    previousSeenAt?: string | null;
+    observationCount?: number | null;
+    changedFields?: string[];
+    previousFollowersCount?: number | null;
+    followersDelta?: number | null;
+    followersGrowthPercent?: number | null;
+    followersPerDay?: number | null;
+    previousTotalLikesReceived?: number | null;
+    likesDelta?: number | null;
+    likesPerDay?: number | null;
+    previousTotalVideosCount?: number | null;
+    videosDelta?: number | null;
+    postsPerWeek?: number | null;
+    likesPerNewVideo?: number | null;
+    growthSignals?: string[];
 }
 
 export interface VideoRecord {

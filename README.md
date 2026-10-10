@@ -1,6 +1,6 @@
-# TikTok Profile Scraper - Public Profile Analytics
+# TikTok Profile Scraper - Creator Growth Monitor
 
-Collect structured metadata and statistics from public TikTok profiles for creator research, brand monitoring, and market analysis.
+Collect structured public TikTok profile statistics and turn scheduled runs into creator-growth intelligence for influencer research, campaign reporting, competitor monitoring, and brand analysis.
 
 The Actor reads TikTok's public embedded profile payload through bounded HTTP sessions. If TikTok challenges the detailed profile page, it falls back to TikTok's official public oEmbed metadata. It charges only after a profile record is successfully saved.
 
@@ -11,6 +11,18 @@ The Actor reads TikTok's public embedded profile payload through bounded HTTP se
 - Verification, privacy, and region signals
 - Public website in bio and profile image URL
 - Collection timestamp
+- Optional persistent growth status: baseline, updated, unchanged, or partial
+- Follower, total-like, and video-count deltas against the previous detailed observation
+- Follower growth percentage, followers per day, likes per day, and posting pace
+- Likes gained per new video and signals for spikes, declines, new videos, profile edits, or verification changes
+
+## Persistent Creator Growth Monitoring
+
+Enable `trackGrowth`, choose a stable `monitorName`, and schedule the same creator list. The first detailed observation becomes the baseline. Later profile rows include deltas and time-normalized growth velocity against the latest detailed observation in that named watchlist.
+
+Every successful observation remains one normal `profile-scraped` event. There is no extra monitoring event. The Actor intentionally does not suppress unchanged profiles: scheduled observations are the evidence needed for a complete time series, and charging the normal row keeps the low-volume monitoring workflow sustainable.
+
+If TikTok exposes only identity data through its official oEmbed fallback, `dataQuality` is `identity-only` and `trackingStatus` is `partial`. That observation is retained, but missing counts do not overwrite the most recent detailed baseline or create false growth alerts.
 
 ## Pricing
 
@@ -21,6 +33,9 @@ Each successfully saved public profile costs **$0.002**. Failed, blocked, privat
 ```json
 {
   "usernames": ["charlidamelio", "https://www.tiktok.com/@tiktok"],
+  "trackGrowth": true,
+  "monitorName": "us-creators",
+  "observationHistoryLimit": 12,
   "proxyConfiguration": {
     "useApifyProxy": true,
     "apifyProxyGroups": ["RESIDENTIAL"]
@@ -41,6 +56,17 @@ A run accepts up to 50 usernames or profile URLs. Residential proxy rotation is 
   "followingCount": 1300,
   "totalLikesReceived": 11700000000,
   "totalVideosCount": 2800,
+  "dataQuality": "detailed",
+  "monitorName": "us-creators",
+  "trackingStatus": "updated",
+  "previousFollowersCount": 154900000,
+  "followersDelta": 100000,
+  "followersGrowthPercent": 0.0646,
+  "followersPerDay": 12500,
+  "videosDelta": 2,
+  "postsPerWeek": 1.75,
+  "growthSignals": ["followers_growing", "new_videos"],
+  "observationCount": 4,
   "verifiedBadge": true,
   "region": "US",
   "profileUrl": "https://www.tiktok.com/@charlidamelio",

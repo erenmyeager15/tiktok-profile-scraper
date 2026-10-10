@@ -1,8 +1,8 @@
 {
     "actorSpecification": 1,
     "name": "tiktok-profile-scraper",
-    "title": "TikTok Profile Scraper - Public Profile Analytics",
-    "description": "Extract public TikTok profile statistics for creator research and brand monitoring. Uses bounded HTTP sessions with proxy rotation and charges only successfully saved profiles.",
+    "title": "TikTok Profile Scraper - Creator Growth Monitor",
+    "description": "Track public TikTok creator profiles with follower, like, and video-count history, daily growth velocity, posting pace, and profile-change signals. Uses bounded HTTP sessions and charges only successfully saved profiles.",
     "version": "1.0",
     "input": "../INPUT_SCHEMA.json",
     "dockerfile": "Dockerfile",

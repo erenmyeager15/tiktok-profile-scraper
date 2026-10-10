@@ -31,6 +31,7 @@ export function parseTikTokOEmbed(payload: JsonRecord, requestedUsername: string
             websiteInBio: null,
             isPrivate: false,
             scrapedAt: new Date().toISOString(),
+            dataQuality: 'identity-only',
         },
         videos: [],
     };
@@ -110,14 +111,18 @@ export function parseTikTokPayload(payload: JsonRecord, requestedUsername: strin
     const stats = userInfo?.statsV2 ?? userInfo?.stats;
     if (!user || !text(user.uniqueId)) return null;
     const username = text(user.uniqueId) || requestedUsername;
+    const followersCount = parseAbbreviatedNumber(stats?.followerCount);
+    const followingCount = parseAbbreviatedNumber(stats?.followingCount);
+    const totalLikesReceived = parseAbbreviatedNumber(stats?.heartCount ?? stats?.heart);
+    const totalVideosCount = parseAbbreviatedNumber(stats?.videoCount);
     const profile: ProfileRecord = {
         username,
         displayName: text(user.nickname) || username,
         bioText: text(user.signature),
-        followersCount: parseAbbreviatedNumber(stats?.followerCount),
-        followingCount: parseAbbreviatedNumber(stats?.followingCount),
-        totalLikesReceived: parseAbbreviatedNumber(stats?.heartCount ?? stats?.heart),
-        totalVideosCount: parseAbbreviatedNumber(stats?.videoCount),
+        followersCount,
+        followingCount,
+        totalLikesReceived,
+        totalVideosCount,
         verifiedBadge: Boolean(user.verified),
         profileImageUrl: text(user.avatarLarger ?? user.avatarMedium) || null,
         profileUrl: `https://www.tiktok.com/@${username}`,
@@ -125,6 +130,9 @@ export function parseTikTokPayload(payload: JsonRecord, requestedUsername: strin
         websiteInBio: text(user?.bioLink?.link) || null,
         isPrivate: Boolean(user.privateAccount),
         scrapedAt: new Date().toISOString(),
+        dataQuality: [followersCount, followingCount, totalLikesReceived, totalVideosCount].some((value) => value !== null)
+            ? 'detailed'
+            : 'identity-only',
     };
     const videos = findItems(payload)
         .map((item) => mapTikTokVideo(item, username))
