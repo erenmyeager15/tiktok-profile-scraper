@@ -1,8 +1,8 @@
 # TikTok Profile Scraper & Creator Growth Monitor
 
-Collect structured public TikTok profile statistics and turn scheduled runs into creator-growth intelligence for influencer research, campaign reporting, competitor monitoring, and brand analysis.
+Compare public TikTok profiles for influencer research, creator vetting and campaign reporting. Export available follower, like and video-count statistics, then reuse a named watchlist to measure observed growth, posting pace and profile changes for creator and brand analysis.
 
-The Actor reads TikTok's public embedded profile payload through bounded HTTP sessions. If TikTok challenges the detailed profile page, it falls back to TikTok's official public oEmbed metadata. It charges only after a profile record is successfully saved.
+The Actor reads TikTok's public embedded profile payload through bounded HTTP sessions. If TikTok challenges the detailed profile page, it falls back to TikTok's official public oEmbed metadata. The `profile-scraped` result event is charged only after a profile record is successfully saved; the separate Actor Start fee still applies.
 
 ## What It Extracts
 
@@ -32,9 +32,20 @@ Every successful run also writes:
 
 These reports are included in the normal profile price; there is no separate reporting or monitoring fee.
 
-## Pricing
+## Pricing: Profile Results + Actor Start
 
-Each successfully saved public profile costs **$0.002**. Failed, blocked, private, unavailable, and unsaved profiles are not charged.
+The Actor uses Pay Per Event pricing:
+
+| Event | Price |
+| --- | ---: |
+| `profile-scraped` | `$0.002` per successfully saved profile, or `$2.00` per 1,000 |
+| `apify-actor-start` | `$0.00005` per GB when the Actor starts, minimum one event |
+
+Failed requests and profiles that are not saved do not trigger `profile-scraped`. A successfully saved identity-only oEmbed fallback is still one profile event; it is marked `partial` and does not promise complete statistics. Profiles already saved before a partial failure retain their normal result charges.
+
+The Actor Start fee can still apply to empty or failed runs. Apify counts one start event per GB of memory, with at least one event; at the unchanged 256 MB default, that is `$0.00005` for the start event. Reports and growth comparisons add no separate report/monitoring event. Every saved observation, including an unchanged profile, retains its normal profile-event charge.
+
+See the [live Pricing tab](https://apify.com/fascinating_lentil/tiktok-profile-scraper/pricing) for current event prices, discounts and platform-usage terms. Profile-result subtotals exclude the start fee.
 
 ## Input
 

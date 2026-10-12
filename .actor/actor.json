@@ -2,7 +2,7 @@
     "actorSpecification": 1,
     "name": "tiktok-profile-scraper",
     "title": "TikTok Profile Scraper & Creator Growth Monitor",
-    "description": "Track public TikTok profiles with follower, like, video and posting-pace history, profile-change signals, named watchlists, and downloadable JSON/CSV reports. Charges only successfully saved profiles.",
+    "description": "Extract public TikTok profile statistics for influencer research and creator-growth monitoring. Track available follower/like/video-count changes, posting pace and profile edits with named watchlists and CSV/JSON reports. $2/1,000 saved profiles plus the start event.",
     "version": "1.0",
     "input": "../INPUT_SCHEMA.json",
     "dockerfile": "Dockerfile",
